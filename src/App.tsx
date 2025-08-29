@@ -83,11 +83,15 @@ function App() {
     );
   };
 
-  const handleUpdateReview = (id: string, review: string) => {
+  const handleUpdateReview = (id: string, review: string, reviewDate?: string) => {
     setRestaurants(current =>
       current.map(restaurant =>
         restaurant.id === id
-          ? { ...restaurant, review }
+          ? { 
+              ...restaurant, 
+              review,
+              reviewDate: reviewDate || new Date().toISOString()
+            }
           : restaurant
       )
     );

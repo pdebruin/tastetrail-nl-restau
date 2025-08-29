@@ -3,29 +3,50 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, Circle, MapPin, Edit3, NavigationArrow } from '@phosphor-icons/react';
+import { Input } from '@/components/ui/input';
+import { CheckCircle, Circle, MapPin, Edit3, NavigationArrow, Calendar } from '@phosphor-icons/react';
 import { Restaurant, UserLocation } from '@/lib/types';
 import { calculateDistance, formatDistance } from '@/lib/utils';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
   onToggleVisited: (id: string) => void;
-  onUpdateReview: (id: string, review: string) => void;
+  onUpdateReview: (id: string, review: string, reviewDate?: string) => void;
   userLocation?: UserLocation | null;
 }
 
 export function RestaurantCard({ restaurant, onToggleVisited, onUpdateReview, userLocation }: RestaurantCardProps) {
   const [isEditingReview, setIsEditingReview] = useState(false);
   const [reviewText, setReviewText] = useState(restaurant.review || '');
+  const [reviewDate, setReviewDate] = useState(() => {
+    if (restaurant.reviewDate) {
+      return new Date(restaurant.reviewDate).toISOString().split('T')[0];
+    }
+    return new Date().toISOString().split('T')[0];
+  });
 
   const handleSaveReview = () => {
-    onUpdateReview(restaurant.id, reviewText);
+    onUpdateReview(restaurant.id, reviewText, new Date(reviewDate).toISOString());
     setIsEditingReview(false);
   };
 
   const handleCancelReview = () => {
     setReviewText(restaurant.review || '');
+    setReviewDate(() => {
+      if (restaurant.reviewDate) {
+        return new Date(restaurant.reviewDate).toISOString().split('T')[0];
+      }
+      return new Date().toISOString().split('T')[0];
+    });
     setIsEditingReview(false);
+  };
+
+  const formatReviewDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   // Calculate distance if user location is available
@@ -94,17 +115,37 @@ export function RestaurantCard({ restaurant, onToggleVisited, onUpdateReview, us
           </div>
           
           {isEditingReview ? (
-            <div className="space-y-2">
-              <Textarea
-                value={reviewText}
-                onChange={(e) => setReviewText(e.target.value)}
-                placeholder="Share your experience..."
-                className="min-h-[80px] resize-none"
-                id={`review-${restaurant.id}`}
-              />
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <label htmlFor={`review-date-${restaurant.id}`} className="text-sm font-medium text-foreground">
+                  Visit Date
+                </label>
+                <div className="relative">
+                  <Input
+                    type="date"
+                    value={reviewDate}
+                    onChange={(e) => setReviewDate(e.target.value)}
+                    className="pl-10"
+                    id={`review-date-${restaurant.id}`}
+                  />
+                  <Calendar size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor={`review-${restaurant.id}`} className="text-sm font-medium text-foreground">
+                  Review
+                </label>
+                <Textarea
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  placeholder="Share your experience..."
+                  className="min-h-[80px] resize-none"
+                  id={`review-${restaurant.id}`}
+                />
+              </div>
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleSaveReview}>
-                  Save
+                  Save Review
                 </Button>
                 <Button size="sm" variant="outline" onClick={handleCancelReview}>
                   Cancel
@@ -112,9 +153,23 @@ export function RestaurantCard({ restaurant, onToggleVisited, onUpdateReview, us
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground italic">
-              {restaurant.review || 'No review yet. Click to add one!'}
-            </p>
+            <div className="space-y-2">
+              {restaurant.review ? (
+                <>
+                  {restaurant.reviewDate && (
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <Calendar size={12} className="mr-1" />
+                      <span>Visited on {formatReviewDate(restaurant.reviewDate)}</span>
+                    </div>
+                  )}
+                  <p className="text-sm text-foreground">{restaurant.review}</p>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  No review yet. Click to add one!
+                </p>
+              )}
+            </div>
           )}
         </div>
       </CardContent>

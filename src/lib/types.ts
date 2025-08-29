@@ -8,6 +8,7 @@ export interface Restaurant {
   description?: string;
   visited?: boolean;
   review?: string;
+  reviewDate?: string; // ISO date string
 }
 
 export type FilterType = 'all' | 'visited' | 'unvisited';
