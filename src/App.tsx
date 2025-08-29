@@ -12,10 +12,25 @@ import { List, MapTrifold } from '@phosphor-icons/react';
 function App() {
   const [restaurants, setRestaurants] = useKV('tastetrail-restaurants', defaultRestaurants);
   const [currentFilter, setCurrentFilter] = useKV<FilterType>('tastetrail-filter', 'all');
+  const [searchQuery, setSearchQuery] = useKV<string>('tastetrail-search', '');
   const [currentView, setCurrentView] = useState<ViewType>('list');
 
   const filteredRestaurants = useMemo(() => {
-    return restaurants.filter(restaurant => {
+    let filtered = restaurants;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(restaurant => 
+        restaurant.name.toLowerCase().includes(query) ||
+        restaurant.city.toLowerCase().includes(query) ||
+        restaurant.tags.some(tag => tag.toLowerCase().includes(query)) ||
+        (restaurant.description && restaurant.description.toLowerCase().includes(query))
+      );
+    }
+
+    // Apply visit status filter
+    return filtered.filter(restaurant => {
       switch (currentFilter) {
         case 'visited':
           return restaurant.visited;
@@ -25,9 +40,15 @@ function App() {
           return true;
       }
     });
-  }, [restaurants, currentFilter]);
+  }, [restaurants, currentFilter, searchQuery]);
 
   const visitedCount = restaurants.filter(r => r.visited).length;
+
+  const handleFilterChange = (filter: FilterType) => {
+    setCurrentFilter(filter);
+    // Optionally clear search when changing filters for better UX
+    // setSearchQuery('');
+  };
 
   const handleToggleVisited = (id: string) => {
     setRestaurants(current => 
@@ -92,13 +113,20 @@ function App() {
       <main className="max-w-4xl mx-auto px-4 py-6">
         <FilterBar
           currentFilter={currentFilter}
-          onFilterChange={setCurrentFilter}
+          onFilterChange={handleFilterChange}
           visitedCount={visitedCount}
           totalCount={restaurants.length}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
         />
 
         {currentView === 'list' ? (
           <div className="space-y-6">
+            {searchQuery.trim() && (
+              <div className="text-sm text-muted-foreground">
+                {filteredRestaurants.length} restaurant{filteredRestaurants.length !== 1 ? 's' : ''} found for "{searchQuery}"
+              </div>
+            )}
             {filteredRestaurants.length > 0 ? (
               filteredRestaurants.map(restaurant => (
                 <RestaurantCard
@@ -111,7 +139,9 @@ function App() {
             ) : (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
-                  {currentFilter === 'visited' 
+                  {searchQuery.trim() 
+                    ? `No restaurants found matching "${searchQuery}"`
+                    : currentFilter === 'visited' 
                     ? "You haven't visited any restaurants yet. Start exploring!"
                     : currentFilter === 'unvisited'
                     ? "Congratulations! You've visited all restaurants in your list."
@@ -123,7 +153,7 @@ function App() {
           </div>
         ) : (
           <MapView
-            restaurants={restaurants}
+            restaurants={filteredRestaurants}
             onRestaurantClick={handleRestaurantClick}
           />
         )}
