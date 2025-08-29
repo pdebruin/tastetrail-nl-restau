@@ -19,10 +19,28 @@ function App() {
   const [currentView, setCurrentView] = useState<ViewType>('list');
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
 
+  // Helper function to merge restaurant data while preserving user data
+  const mergeRestaurantData = (newRestaurants: Restaurant[], existingRestaurants: Restaurant[]) => {
+    return newRestaurants.map(newRestaurant => {
+      const existing = existingRestaurants.find(r => r.id === newRestaurant.id);
+      if (existing) {
+        // Preserve user data: visited status, review, and reviewDate
+        return {
+          ...newRestaurant,
+          visited: existing.visited,
+          review: existing.review,
+          reviewDate: existing.reviewDate
+        };
+      }
+      return newRestaurant;
+    });
+  };
+
   // Force update data if the stored data has fewer restaurants than the default
   useEffect(() => {
     if (restaurants && restaurants.length < defaultRestaurants.length) {
-      setRestaurants(defaultRestaurants);
+      const mergedRestaurants = mergeRestaurantData(defaultRestaurants, restaurants);
+      setRestaurants(mergedRestaurants);
       toast.success(`Updated restaurant list to ${defaultRestaurants.length} restaurants!`);
     }
   }, [restaurants, setRestaurants]);
@@ -114,8 +132,9 @@ function App() {
   };
 
   const handleResetData = () => {
-    setRestaurants(defaultRestaurants);
-    toast.success(`Reset to ${defaultRestaurants.length} restaurants from the Netherlands!`);
+    const mergedRestaurants = mergeRestaurantData(defaultRestaurants, restaurants || []);
+    setRestaurants(mergedRestaurants);
+    toast.success(`Refreshed restaurant data while preserving your visits and reviews!`);
   };
 
   return (
@@ -140,7 +159,7 @@ function App() {
                 variant="outline"
                 size="sm"
                 onClick={handleResetData}
-                title="Reset to latest restaurant data"
+                title="Refresh restaurant data while keeping your visits and reviews"
               >
                 <ArrowClockwise size={16} className="mr-2" />
                 Refresh Data
