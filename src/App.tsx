@@ -12,7 +12,7 @@ import { List, MapTrifold } from '@phosphor-icons/react';
 import logoImage from '@/assets/images/download.png';
 
 function App() {
-  const [restaurants, setRestaurants] = useKV('tastetrail-restaurants', defaultRestaurants);
+  const [restaurants, setRestaurants] = useKV<Restaurant[]>('tastetrail-restaurants', defaultRestaurants);
   const [currentFilter, setCurrentFilter] = useKV<FilterType>('tastetrail-filter', 'all');
   const [searchQuery, setSearchQuery] = useKV<string>('tastetrail-search', '');
   const [sortBy, setSortBy] = useKV<SortType>('tastetrail-sort', 'name');
@@ -20,10 +20,10 @@ function App() {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
 
   const filteredAndSortedRestaurants = useMemo(() => {
-    let filtered = restaurants;
+    let filtered = restaurants || [];
 
     // Apply search filter
-    if (searchQuery.trim()) {
+    if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(restaurant => 
         restaurant.name.toLowerCase().includes(query) ||
@@ -65,7 +65,7 @@ function App() {
     return sorted;
   }, [restaurants, currentFilter, searchQuery, sortBy, userLocation]);
 
-  const visitedCount = restaurants.filter(r => r.visited).length;
+  const visitedCount = (restaurants || []).filter(r => r.visited).length;
 
   const handleFilterChange = (filter: FilterType) => {
     setCurrentFilter(filter);
@@ -75,7 +75,7 @@ function App() {
 
   const handleToggleVisited = (id: string) => {
     setRestaurants(current => 
-      current.map(restaurant =>
+      (current || []).map(restaurant =>
         restaurant.id === id 
           ? { ...restaurant, visited: !restaurant.visited }
           : restaurant
@@ -85,7 +85,7 @@ function App() {
 
   const handleUpdateReview = (id: string, review: string, reviewDate?: string) => {
     setRestaurants(current =>
-      current.map(restaurant =>
+      (current || []).map(restaurant =>
         restaurant.id === id
           ? { 
               ...restaurant, 
@@ -146,22 +146,22 @@ function App() {
 
       <main className="max-w-4xl mx-auto px-4 py-6">
         <FilterBar
-          currentFilter={currentFilter}
+          currentFilter={currentFilter || 'all'}
           onFilterChange={handleFilterChange}
           visitedCount={visitedCount}
-          totalCount={restaurants.length}
-          searchQuery={searchQuery}
+          totalCount={(restaurants || []).length}
+          searchQuery={searchQuery || ''}
           onSearchChange={setSearchQuery}
-          sortBy={sortBy}
+          sortBy={sortBy || 'name'}
           onSortChange={setSortBy}
           userLocation={userLocation}
         />
 
         {currentView === 'list' ? (
           <div className="space-y-6">
-            {searchQuery.trim() && (
+            {(searchQuery || '').trim() && (
               <div className="text-sm text-muted-foreground">
-                {filteredAndSortedRestaurants.length} restaurant{filteredAndSortedRestaurants.length !== 1 ? 's' : ''} found for "{searchQuery}"
+                {filteredAndSortedRestaurants.length} restaurant{filteredAndSortedRestaurants.length !== 1 ? 's' : ''} found for "{searchQuery || ''}"
               </div>
             )}
             {filteredAndSortedRestaurants.length > 0 ? (
@@ -177,8 +177,8 @@ function App() {
             ) : (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
-                  {searchQuery.trim() 
-                    ? `No restaurants found matching "${searchQuery}"`
+                  {(searchQuery || '').trim() 
+                    ? `No restaurants found matching "${searchQuery || ''}"`
                     : currentFilter === 'visited' 
                     ? "You haven't visited any restaurants yet. Start exploring!"
                     : currentFilter === 'unvisited'

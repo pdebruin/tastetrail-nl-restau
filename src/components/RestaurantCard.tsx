@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { CheckCircle, Circle, MapPin, Edit3, NavigationArrow, Calendar } from '@phosphor-icons/react';
+import { CheckCircle, Circle, MapPin, PencilSimple, NavigationArrow, Calendar } from '@phosphor-icons/react';
 import { Restaurant, UserLocation } from '@/lib/types';
 import { calculateDistance, formatDistance } from '@/lib/utils';
 
@@ -40,6 +40,21 @@ export function RestaurantCard({ restaurant, onToggleVisited, onUpdateReview, us
     });
     setIsEditingReview(false);
   };
+
+  const handleEditClick = () => {
+    setIsEditingReview(true);
+  };
+
+  // Sync state with restaurant data when it changes
+  useEffect(() => {
+    setReviewText(restaurant.review || '');
+    setReviewDate(() => {
+      if (restaurant.reviewDate) {
+        return new Date(restaurant.reviewDate).toISOString().split('T')[0];
+      }
+      return new Date().toISOString().split('T')[0];
+    });
+  }, [restaurant.review, restaurant.reviewDate]);
 
   const formatReviewDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -106,10 +121,10 @@ export function RestaurantCard({ restaurant, onToggleVisited, onUpdateReview, us
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsEditingReview(true)}
+                onClick={handleEditClick}
                 className="h-8 px-2 text-muted-foreground hover:text-foreground"
               >
-                <Edit3 size={16} />
+                <PencilSimple size={16} />
               </Button>
             )}
           </div>

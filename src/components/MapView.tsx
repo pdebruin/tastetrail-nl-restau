@@ -294,7 +294,7 @@ export function MapView({ restaurants, onRestaurantClick, userLocation, onUserLo
 
     // Fit map to show all markers
     if (restaurants.length > 0) {
-      const group = new L.featureGroup(markersRef.current);
+      const group = L.featureGroup(markersRef.current);
       map.fitBounds(group.getBounds().pad(0.1));
     }
   }, [restaurants, onRestaurantClick]);
