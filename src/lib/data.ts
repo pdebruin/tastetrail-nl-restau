@@ -51,8 +51,8 @@ export const defaultRestaurants: Restaurant[] = [
     name: 'Restaurant Greetje',
     city: 'Amsterdam',
     tags: ['Modern Dutch', 'Traditional', 'Creative'],
-    latitude: 52.3676,
-    longitude: 4.9041,
+    latitude: 52.3728,
+    longitude: 4.8936,
     description: 'Modern interpretation of traditional Dutch cuisine'
   },
   {
@@ -87,8 +87,8 @@ export const defaultRestaurants: Restaurant[] = [
     name: 'Restaurant Spectrum',
     city: 'Amsterdam',
     tags: ['Michelin Star', 'Modern', 'Canal View'],
-    latitude: 52.3676,
-    longitude: 4.9041,
+    latitude: 52.3640,
+    longitude: 4.8884,
     description: 'Modern cuisine overlooking Amsterdam canals'
   },
   {
@@ -96,8 +96,8 @@ export const defaultRestaurants: Restaurant[] = [
     name: 'Restaurant Bridges',
     city: 'Amsterdam',
     tags: ['Fine Dining', 'French', 'Luxury Hotel'],
-    latitude: 52.3676,
-    longitude: 4.9041,
+    latitude: 52.3588,
+    longitude: 4.8980,
     description: 'French fine dining in luxury hotel setting'
   },
   {

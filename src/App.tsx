@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useKV } from '@github/spark/hooks';
+import { toast, Toaster } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { RestaurantCard } from '@/components/RestaurantCard';
 import { FilterBar } from '@/components/FilterBar';
@@ -49,11 +50,16 @@ function App() {
   };
 
   const handleRestaurantClick = (restaurant: Restaurant) => {
-    console.log('Restaurant clicked:', restaurant.name);
+    const status = restaurant.visited ? 'visited' : 'on your list';
+    toast.success(`${restaurant.name} in ${restaurant.city} is ${status}`, {
+      description: restaurant.description || restaurant.tags.join(', '),
+      duration: 3000,
+    });
   };
 
   return (
     <div className="min-h-screen bg-background">
+      <Toaster position="top-right" />
       <header className="bg-card border-b sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">

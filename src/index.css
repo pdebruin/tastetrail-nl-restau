@@ -66,3 +66,25 @@
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
+
+/* Custom styles for Leaflet map */
+.custom-map-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.custom-popup .leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border: 1px solid oklch(0.9 0.02 85);
+}
+
+.custom-popup .leaflet-popup-content {
+  margin: 16px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.custom-popup .leaflet-popup-tip {
+  background: white;
+  border: 1px solid oklch(0.9 0.02 85);
+}
