@@ -141,43 +141,52 @@ function App() {
     <div className="min-h-screen bg-background">
       <Toaster position="top-right" />
       <header className="bg-card border-b sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 py-4 md:py-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <img 
                 src={logoImage} 
                 alt="TasteTrail NL Logo" 
-                className="w-10 h-10 object-contain"
+                className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0"
               />
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">TasteTrail NL</h1>
-                <p className="text-muted-foreground">Your restaurant bucket list for the Netherlands</p>
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground">TasteTrail NL</h1>
+                <p className="text-sm sm:text-base text-muted-foreground hidden sm:block">
+                  Your restaurant bucket list for the Netherlands
+                </p>
+                <p className="text-xs text-muted-foreground sm:hidden">
+                  Restaurant bucket list
+                </p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleResetData}
                 title="Refresh restaurant data while keeping your visits and reviews"
+                className="text-xs sm:text-sm"
               >
-                <ArrowClockwise size={16} className="mr-2" />
-                Refresh Data
+                <ArrowClockwise size={14} className="mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Refresh Data</span>
+                <span className="sm:hidden">Refresh</span>
               </Button>
               <Button
                 variant={currentView === 'list' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setCurrentView('list')}
+                className="text-xs sm:text-sm"
               >
-                <List size={16} className="mr-2" />
+                <List size={14} className="mr-1 sm:mr-2" />
                 List
               </Button>
               <Button
                 variant={currentView === 'map' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setCurrentView('map')}
+                className="text-xs sm:text-sm"
               >
-                <MapTrifold size={16} className="mr-2" />
+                <MapTrifold size={14} className="mr-1 sm:mr-2" />
                 Map
               </Button>
             </div>
@@ -185,7 +194,7 @@ function App() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <FilterBar
           currentFilter={currentFilter || 'all'}
           onFilterChange={handleFilterChange}

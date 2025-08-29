@@ -14,7 +14,7 @@ export function SearchBar({ searchQuery, onSearchChange, placeholder = "Search r
   };
 
   return (
-    <div className="relative flex-1 max-w-md">
+    <div className="relative flex-1">
       <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
         <MagnifyingGlass size={16} />
       </div>
@@ -23,7 +23,7 @@ export function SearchBar({ searchQuery, onSearchChange, placeholder = "Search r
         placeholder={placeholder}
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="pl-10 pr-10"
+        className="pl-10 pr-10 text-sm sm:text-base"
       />
       {searchQuery && (
         <Button

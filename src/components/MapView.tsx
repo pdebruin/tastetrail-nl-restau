@@ -303,25 +303,26 @@ export function MapView({ restaurants, onRestaurantClick, userLocation, onUserLo
     <div className="relative">
       <div
         ref={mapRef}
-        className="h-[500px] rounded-lg overflow-hidden border border-border"
+        className="h-[400px] sm:h-[500px] rounded-lg overflow-hidden border border-border"
         style={{ zIndex: 0 }}
       />
       
       {/* Locate user button */}
-      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+      <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 flex flex-col gap-2">
         <Button
           size="sm"
           variant="secondary"
           onClick={handleLocateUser}
           disabled={isLocating}
-          className="bg-card/95 backdrop-blur-sm border border-border shadow-lg hover:bg-card"
+          className="bg-card/95 backdrop-blur-sm border border-border shadow-lg hover:bg-card text-xs sm:text-sm"
         >
           {isLocating ? (
-            <Spinner size={16} className="mr-2 animate-spin" />
+            <Spinner size={14} className="mr-1 sm:mr-2 animate-spin" />
           ) : (
-            <Crosshair size={16} className="mr-2" />
+            <Crosshair size={14} className="mr-1 sm:mr-2" />
           )}
-          {isLocating ? 'Locating...' : 'My Location'}
+          <span className="hidden sm:inline">{isLocating ? 'Locating...' : 'My Location'}</span>
+          <span className="sm:hidden">{isLocating ? 'Finding...' : 'Location'}</span>
         </Button>
         
         {/* Debug info for development */}
@@ -337,7 +338,7 @@ export function MapView({ restaurants, onRestaurantClick, userLocation, onUserLo
       
       {/* Location help text */}
       {!userLocation && (
-        <div className="absolute bottom-4 left-4 right-4 bg-card/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-lg z-10">
+        <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 bg-card/95 backdrop-blur-sm border border-border rounded-lg p-2 sm:p-3 shadow-lg z-10">
           <p className="text-xs text-muted-foreground">
             <strong>💡 Location Tips:</strong> 
             {permissionStatus === 'denied' ? (

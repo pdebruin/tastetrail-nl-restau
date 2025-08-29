@@ -32,17 +32,17 @@ export function FilterBar({
   return (
     <div className="space-y-4 mb-6">
       {/* Search Bar and Sort */}
-      <div className="flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-lg border">
+      <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 p-3 sm:p-4 bg-card rounded-lg border">
         <div className="flex-1">
           <SearchBar
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
           />
         </div>
-        <div className="flex items-center gap-2 min-w-[140px]">
-          <ArrowsDownUp size={16} className="text-muted-foreground" />
+        <div className="flex items-center gap-2 min-w-0 sm:min-w-[140px]">
+          <ArrowsDownUp size={16} className="text-muted-foreground flex-shrink-0" />
           <Select value={sortBy} onValueChange={onSortChange}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full text-xs sm:text-sm">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
@@ -57,13 +57,13 @@ export function FilterBar({
       </div>
       
       {/* Filter Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-lg border">
-        <div className="flex gap-2 flex-wrap">
+      <div className="flex flex-col gap-4 p-4 bg-card rounded-lg border">
+        <div className="flex gap-2 flex-wrap sm:flex-nowrap">
           <Button
             variant={currentFilter === 'all' ? 'default' : 'outline'}
             size="sm"
             onClick={() => onFilterChange('all')}
-            className="flex-1 sm:flex-none"
+            className="flex-1 sm:flex-none text-xs sm:text-sm"
           >
             All ({totalCount})
           </Button>
@@ -71,7 +71,7 @@ export function FilterBar({
             variant={currentFilter === 'visited' ? 'default' : 'outline'}
             size="sm"
             onClick={() => onFilterChange('visited')}
-            className="flex-1 sm:flex-none text-accent border-accent hover:bg-accent hover:text-accent-foreground"
+            className="flex-1 sm:flex-none text-accent border-accent hover:bg-accent hover:text-accent-foreground text-xs sm:text-sm"
           >
             Visited ({visitedCount})
           </Button>
@@ -79,13 +79,13 @@ export function FilterBar({
             variant={currentFilter === 'unvisited' ? 'default' : 'outline'}
             size="sm"
             onClick={() => onFilterChange('unvisited')}
-            className="flex-1 sm:flex-none"
+            className="flex-1 sm:flex-none text-xs sm:text-sm"
           >
             To Visit ({unvisitedCount})
           </Button>
         </div>
         
-        <div className="text-sm text-muted-foreground flex items-center">
+        <div className="text-xs sm:text-sm text-muted-foreground flex items-center justify-center sm:justify-start">
           Progress: {visitedCount}/{totalCount} restaurants visited
         </div>
       </div>
