@@ -13,3 +13,10 @@ export interface Restaurant {
 export type FilterType = 'all' | 'visited' | 'unvisited';
 
 export type ViewType = 'list' | 'map';
+
+export type SortType = 'name' | 'city' | 'distance';
+
+export interface UserLocation {
+  lat: number;
+  lng: number;
+}

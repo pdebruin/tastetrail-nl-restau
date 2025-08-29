@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { RestaurantCard } from '@/components/RestaurantCard';
 import { FilterBar } from '@/components/FilterBar';
 import { MapView } from '@/components/MapView';
-import { Restaurant, FilterType, ViewType } from '@/lib/types';
+import { Restaurant, FilterType, ViewType, SortType, UserLocation } from '@/lib/types';
 import { defaultRestaurants } from '@/lib/data';
+import { calculateDistance } from '@/lib/utils';
 import { List, MapTrifold } from '@phosphor-icons/react';
 import logoImage from '@/assets/images/download.png';
 
@@ -14,9 +15,11 @@ function App() {
   const [restaurants, setRestaurants] = useKV('tastetrail-restaurants', defaultRestaurants);
   const [currentFilter, setCurrentFilter] = useKV<FilterType>('tastetrail-filter', 'all');
   const [searchQuery, setSearchQuery] = useKV<string>('tastetrail-search', '');
+  const [sortBy, setSortBy] = useKV<SortType>('tastetrail-sort', 'name');
   const [currentView, setCurrentView] = useState<ViewType>('list');
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
 
-  const filteredRestaurants = useMemo(() => {
+  const filteredAndSortedRestaurants = useMemo(() => {
     let filtered = restaurants;
 
     // Apply search filter
@@ -31,7 +34,7 @@ function App() {
     }
 
     // Apply visit status filter
-    return filtered.filter(restaurant => {
+    filtered = filtered.filter(restaurant => {
       switch (currentFilter) {
         case 'visited':
           return restaurant.visited;
@@ -41,7 +44,26 @@ function App() {
           return true;
       }
     });
-  }, [restaurants, currentFilter, searchQuery]);
+
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'city':
+          return a.city.localeCompare(b.city);
+        case 'distance':
+          if (!userLocation) return 0;
+          const distanceA = calculateDistance(userLocation.lat, userLocation.lng, a.latitude, a.longitude);
+          const distanceB = calculateDistance(userLocation.lat, userLocation.lng, b.latitude, b.longitude);
+          return distanceA - distanceB;
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [restaurants, currentFilter, searchQuery, sortBy, userLocation]);
 
   const visitedCount = restaurants.filter(r => r.visited).length;
 
@@ -126,22 +148,26 @@ function App() {
           totalCount={restaurants.length}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          userLocation={userLocation}
         />
 
         {currentView === 'list' ? (
           <div className="space-y-6">
             {searchQuery.trim() && (
               <div className="text-sm text-muted-foreground">
-                {filteredRestaurants.length} restaurant{filteredRestaurants.length !== 1 ? 's' : ''} found for "{searchQuery}"
+                {filteredAndSortedRestaurants.length} restaurant{filteredAndSortedRestaurants.length !== 1 ? 's' : ''} found for "{searchQuery}"
               </div>
             )}
-            {filteredRestaurants.length > 0 ? (
-              filteredRestaurants.map(restaurant => (
+            {filteredAndSortedRestaurants.length > 0 ? (
+              filteredAndSortedRestaurants.map(restaurant => (
                 <RestaurantCard
                   key={restaurant.id}
                   restaurant={restaurant}
                   onToggleVisited={handleToggleVisited}
                   onUpdateReview={handleUpdateReview}
+                  userLocation={userLocation}
                 />
               ))
             ) : (
@@ -161,8 +187,10 @@ function App() {
           </div>
         ) : (
           <MapView
-            restaurants={filteredRestaurants}
+            restaurants={filteredAndSortedRestaurants}
             onRestaurantClick={handleRestaurantClick}
+            userLocation={userLocation}
+            onUserLocationChange={setUserLocation}
           />
         )}
       </main>

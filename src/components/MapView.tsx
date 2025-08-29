@@ -1,22 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { Restaurant } from '@/lib/types';
+import { Restaurant, UserLocation } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Crosshair, Spinner } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { calculateDistance, formatDistance } from '@/lib/utils';
 
 interface MapViewProps {
   restaurants: Restaurant[];
   onRestaurantClick: (restaurant: Restaurant) => void;
+  userLocation: UserLocation | null;
+  onUserLocationChange: (location: UserLocation | null) => void;
 }
 
-export function MapView({ restaurants, onRestaurantClick }: MapViewProps) {
+export function MapView({ restaurants, onRestaurantClick, userLocation, onUserLocationChange }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const userLocationMarkerRef = useRef<L.Marker | null>(null);
   const [isLocating, setIsLocating] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [permissionStatus, setPermissionStatus] = useState<string>('unknown');
 
   // Check permission status on mount
@@ -67,7 +69,7 @@ export function MapView({ restaurants, onRestaurantClick }: MapViewProps) {
         console.log('Geolocation success:', position);
         const { latitude, longitude } = position.coords;
         const newLocation = { lat: latitude, lng: longitude };
-        setUserLocation(newLocation);
+        onUserLocationChange(newLocation);
         setIsLocating(false);
 
         const map = mapInstanceRef.current;
@@ -238,10 +240,17 @@ export function MapView({ restaurants, onRestaurantClick }: MapViewProps) {
       });
 
       // Create popup content
+      const distance = userLocation 
+        ? calculateDistance(userLocation.lat, userLocation.lng, restaurant.latitude, restaurant.longitude)
+        : null;
+        
       const popupContent = `
         <div style="font-family: Inter, sans-serif; min-width: 200px;">
           <h3 style="margin: 0 0 8px 0; font-weight: 600; color: #2d3748;">${restaurant.name}</h3>
-          <p style="margin: 0 0 8px 0; color: #4a5568; font-size: 14px;">${restaurant.city}</p>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+            <p style="margin: 0; color: #4a5568; font-size: 14px;">${restaurant.city}</p>
+            ${distance !== null ? `<p style="margin: 0; color: #7ba05b; font-size: 13px; font-weight: 500;">📍 ${formatDistance(distance)}</p>` : ''}
+          </div>
           ${restaurant.description ? `<p style="margin: 0 0 8px 0; color: #4a5568; font-size: 13px;">${restaurant.description}</p>` : ''}
           <div style="margin: 8px 0;">
             ${restaurant.tags.map(tag => 

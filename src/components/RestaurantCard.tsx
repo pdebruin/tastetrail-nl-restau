@@ -3,16 +3,18 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, Circle, MapPin, Edit3 } from '@phosphor-icons/react';
-import { Restaurant } from '@/lib/types';
+import { CheckCircle, Circle, MapPin, Edit3, NavigationArrow } from '@phosphor-icons/react';
+import { Restaurant, UserLocation } from '@/lib/types';
+import { calculateDistance, formatDistance } from '@/lib/utils';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
   onToggleVisited: (id: string) => void;
   onUpdateReview: (id: string, review: string) => void;
+  userLocation?: UserLocation | null;
 }
 
-export function RestaurantCard({ restaurant, onToggleVisited, onUpdateReview }: RestaurantCardProps) {
+export function RestaurantCard({ restaurant, onToggleVisited, onUpdateReview, userLocation }: RestaurantCardProps) {
   const [isEditingReview, setIsEditingReview] = useState(false);
   const [reviewText, setReviewText] = useState(restaurant.review || '');
 
@@ -26,15 +28,28 @@ export function RestaurantCard({ restaurant, onToggleVisited, onUpdateReview }: 
     setIsEditingReview(false);
   };
 
+  // Calculate distance if user location is available
+  const distance = userLocation 
+    ? calculateDistance(userLocation.lat, userLocation.lng, restaurant.latitude, restaurant.longitude)
+    : null;
+
   return (
     <Card className={`transition-all duration-200 hover:shadow-md ${restaurant.visited ? 'ring-2 ring-accent/20' : ''}`}>
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
             <h3 className="text-xl font-semibold text-foreground mb-1">{restaurant.name}</h3>
-            <div className="flex items-center text-muted-foreground mb-2">
-              <MapPin size={16} className="mr-1" />
-              <span className="text-sm">{restaurant.city}</span>
+            <div className="flex items-center text-muted-foreground mb-2 gap-4">
+              <div className="flex items-center">
+                <MapPin size={16} className="mr-1" />
+                <span className="text-sm">{restaurant.city}</span>
+              </div>
+              {distance !== null && (
+                <div className="flex items-center text-primary">
+                  <NavigationArrow size={16} className="mr-1" />
+                  <span className="text-sm font-medium">{formatDistance(distance)}</span>
+                </div>
+              )}
             </div>
           </div>
           <Button
