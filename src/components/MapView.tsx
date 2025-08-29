@@ -17,17 +17,54 @@ export function MapView({ restaurants, onRestaurantClick }: MapViewProps) {
   const userLocationMarkerRef = useRef<L.Marker | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [permissionStatus, setPermissionStatus] = useState<string>('unknown');
+
+  // Check permission status on mount
+  useEffect(() => {
+    if ('permissions' in navigator) {
+      navigator.permissions.query({ name: 'geolocation' as PermissionName })
+        .then((result) => {
+          setPermissionStatus(result.state);
+          console.log('Geolocation permission:', result.state);
+          
+          result.onchange = () => {
+            setPermissionStatus(result.state);
+            console.log('Geolocation permission changed to:', result.state);
+          };
+        })
+        .catch((error) => {
+          console.log('Permission query failed:', error);
+        });
+    }
+  }, []);
 
   const handleLocateUser = () => {
+    // Debug logging
+    console.log('Geolocation support:', !!navigator.geolocation);
+    console.log('Is HTTPS:', window.location.protocol === 'https:');
+    console.log('Current URL:', window.location.href);
+    console.log('Permission status:', permissionStatus);
+    
     if (!navigator.geolocation) {
       toast.error('Geolocation is not supported by this browser');
       return;
     }
 
+    // Show warning if permission is denied
+    if (permissionStatus === 'denied') {
+      toast.error('Location access is blocked', {
+        description: 'Please enable location in your browser settings and refresh the page',
+        duration: 8000
+      });
+      return;
+    }
+
     setIsLocating(true);
+    console.log('Starting geolocation request...');
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log('Geolocation success:', position);
         const { latitude, longitude } = position.coords;
         const newLocation = { lat: latitude, lng: longitude };
         setUserLocation(newLocation);
@@ -99,22 +136,32 @@ export function MapView({ restaurants, onRestaurantClick }: MapViewProps) {
         }
       },
       (error) => {
+        console.log('Geolocation error:', error);
         setIsLocating(false);
         let errorMessage = 'Unable to get your location';
         
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Location access denied. Please enable location permissions.';
+            errorMessage = 'Location access denied. Please enable location permissions and try again.';
+            console.log('Error: Permission denied');
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information unavailable.';
+            errorMessage = 'Location information unavailable. Please check your GPS settings.';
+            console.log('Error: Position unavailable');
             break;
           case error.TIMEOUT:
-            errorMessage = 'Location request timed out.';
+            errorMessage = 'Location request timed out. Please try again.';
+            console.log('Error: Timeout');
+            break;
+          default:
+            console.log('Error: Unknown error', error.message);
             break;
         }
         
-        toast.error(errorMessage);
+        toast.error(errorMessage, {
+          description: 'Check browser permissions and location settings',
+          duration: 5000
+        });
       },
       {
         enableHighAccuracy: true,
@@ -252,7 +299,7 @@ export function MapView({ restaurants, onRestaurantClick }: MapViewProps) {
       />
       
       {/* Locate user button */}
-      <div className="absolute top-4 left-4 z-10">
+      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
         <Button
           size="sm"
           variant="secondary"
@@ -267,7 +314,35 @@ export function MapView({ restaurants, onRestaurantClick }: MapViewProps) {
           )}
           {isLocating ? 'Locating...' : 'My Location'}
         </Button>
+        
+        {/* Debug info for development */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="text-xs bg-card/95 backdrop-blur-sm border border-border rounded p-2 max-w-xs">
+            <div>Geolocation: {navigator.geolocation ? '✅' : '❌'}</div>
+            <div>Protocol: {window.location.protocol}</div>
+            <div>Permission: {permissionStatus}</div>
+            <div>Location: {userLocation ? '✅' : '❌'}</div>
+          </div>
+        )}
       </div>
+      
+      {/* Location help text */}
+      {!userLocation && (
+        <div className="absolute bottom-4 left-4 right-4 bg-card/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-lg z-10">
+          <p className="text-xs text-muted-foreground">
+            <strong>💡 Location Tips:</strong> 
+            {permissionStatus === 'denied' ? (
+              ' Location access is blocked. Enable location in browser settings and refresh.'
+            ) : permissionStatus === 'prompt' ? (
+              ' Click "My Location" and allow access when prompted.'
+            ) : window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' ? (
+              ' Location requires HTTPS or localhost to work properly.'
+            ) : (
+              ' Click "My Location" to see yourself on the map.'
+            )}
+          </p>
+        </div>
+      )}
       
       {/* Map legend */}
       <div className="absolute top-4 right-4 bg-card/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-lg z-10">
