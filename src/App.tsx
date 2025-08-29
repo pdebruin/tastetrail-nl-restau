@@ -8,6 +8,7 @@ import { MapView } from '@/components/MapView';
 import { Restaurant, FilterType, ViewType } from '@/lib/types';
 import { defaultRestaurants } from '@/lib/data';
 import { List, MapTrifold } from '@phosphor-icons/react';
+import logoImage from '@/assets/images/download.png';
 
 function App() {
   const [restaurants, setRestaurants] = useKV('tastetrail-restaurants', defaultRestaurants);
@@ -84,9 +85,16 @@ function App() {
       <header className="bg-card border-b sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">TasteTrail NL</h1>
-              <p className="text-muted-foreground">Your restaurant bucket list for the Netherlands</p>
+            <div className="flex items-center gap-3">
+              <img 
+                src={logoImage} 
+                alt="TasteTrail NL Logo" 
+                className="w-10 h-10 object-contain"
+              />
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">TasteTrail NL</h1>
+                <p className="text-muted-foreground">Your restaurant bucket list for the Netherlands</p>
+              </div>
             </div>
             <div className="flex gap-2">
               <Button
