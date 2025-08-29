@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { toast, Toaster } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { MapView } from '@/components/MapView';
 import { Restaurant, FilterType, ViewType, SortType, UserLocation } from '@/lib/types';
 import { defaultRestaurants } from '@/lib/data';
 import { calculateDistance } from '@/lib/utils';
-import { List, MapTrifold } from '@phosphor-icons/react';
+import { List, MapTrifold, ArrowClockwise } from '@phosphor-icons/react';
 import logoImage from '@/assets/images/download.png';
 
 function App() {
@@ -18,6 +18,14 @@ function App() {
   const [sortBy, setSortBy] = useKV<SortType>('tastetrail-sort', 'name');
   const [currentView, setCurrentView] = useState<ViewType>('list');
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+
+  // Force update data if the stored data has fewer restaurants than the default
+  useEffect(() => {
+    if (restaurants && restaurants.length < defaultRestaurants.length) {
+      setRestaurants(defaultRestaurants);
+      toast.success(`Updated restaurant list to ${defaultRestaurants.length} restaurants!`);
+    }
+  }, [restaurants, setRestaurants]);
 
   const filteredAndSortedRestaurants = useMemo(() => {
     let filtered = restaurants || [];
@@ -105,6 +113,11 @@ function App() {
     });
   };
 
+  const handleResetData = () => {
+    setRestaurants(defaultRestaurants);
+    toast.success(`Reset to ${defaultRestaurants.length} restaurants from the Netherlands!`);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Toaster position="top-right" />
@@ -123,6 +136,15 @@ function App() {
               </div>
             </div>
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetData}
+                title="Reset to latest restaurant data"
+              >
+                <ArrowClockwise size={16} className="mr-2" />
+                Refresh Data
+              </Button>
               <Button
                 variant={currentView === 'list' ? 'default' : 'outline'}
                 size="sm"
