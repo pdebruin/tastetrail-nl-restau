@@ -128,8 +128,8 @@ export function MapView({ restaurants, onRestaurantClick, userLocation, onUserLo
 
           userLocationMarkerRef.current = userMarker;
 
-          // Pan to user location
-          map.setView([latitude, longitude], Math.max(map.getZoom(), 12), {
+          // Pan to user location without changing zoom level
+          map.panTo([latitude, longitude], {
             animate: true,
             duration: 1
           });
