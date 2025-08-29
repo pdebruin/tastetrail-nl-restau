@@ -1,6 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { Restaurant } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { Crosshair, Spinner } from '@phosphor-icons/react';
+import { toast } from 'sonner';
 
 interface MapViewProps {
   restaurants: Restaurant[];
@@ -11,6 +14,115 @@ export function MapView({ restaurants, onRestaurantClick }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const userLocationMarkerRef = useRef<L.Marker | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  const handleLocateUser = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by this browser');
+      return;
+    }
+
+    setIsLocating(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const newLocation = { lat: latitude, lng: longitude };
+        setUserLocation(newLocation);
+        setIsLocating(false);
+
+        const map = mapInstanceRef.current;
+        if (map) {
+          // Remove existing user location marker
+          if (userLocationMarkerRef.current) {
+            userLocationMarkerRef.current.remove();
+          }
+
+          // Create user location icon
+          const userIcon = L.divIcon({
+            html: `
+              <div style="
+                background-color: #3b82f6;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                border: 3px solid white;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                position: relative;
+              ">
+                <div style="
+                  position: absolute;
+                  top: -8px;
+                  left: -8px;
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 50%;
+                  background-color: rgba(59, 130, 246, 0.2);
+                  border: 2px solid rgba(59, 130, 246, 0.4);
+                  animation: pulse 2s infinite;
+                "></div>
+              </div>
+            `,
+            className: 'user-location-marker',
+            iconSize: [22, 22],
+            iconAnchor: [11, 11],
+            popupAnchor: [0, -11]
+          });
+
+          // Add user location marker
+          const userMarker = L.marker([latitude, longitude], {
+            icon: userIcon
+          }).addTo(map);
+
+          userMarker.bindPopup(`
+            <div style="font-family: Inter, sans-serif; text-align: center;">
+              <div style="margin: 0; font-weight: 600; color: #3b82f6;">📍 Your Location</div>
+              <div style="margin-top: 4px; font-size: 12px; color: #6b7280;">
+                ${latitude.toFixed(4)}, ${longitude.toFixed(4)}
+              </div>
+            </div>
+          `, {
+            className: 'custom-popup'
+          });
+
+          userLocationMarkerRef.current = userMarker;
+
+          // Pan to user location
+          map.setView([latitude, longitude], Math.max(map.getZoom(), 12), {
+            animate: true,
+            duration: 1
+          });
+
+          toast.success('Found your location!');
+        }
+      },
+      (error) => {
+        setIsLocating(false);
+        let errorMessage = 'Unable to get your location';
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location access denied. Please enable location permissions.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information unavailable.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out.';
+            break;
+        }
+        
+        toast.error(errorMessage);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000 // 5 minutes
+      }
+    );
+  };
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -25,6 +137,10 @@ export function MapView({ restaurants, onRestaurantClick }: MapViewProps) {
     }).addTo(map);
 
     return () => {
+      if (userLocationMarkerRef.current) {
+        userLocationMarkerRef.current.remove();
+        userLocationMarkerRef.current = null;
+      }
       map.remove();
       mapInstanceRef.current = null;
     };
@@ -135,6 +251,24 @@ export function MapView({ restaurants, onRestaurantClick }: MapViewProps) {
         style={{ zIndex: 0 }}
       />
       
+      {/* Locate user button */}
+      <div className="absolute top-4 left-4 z-10">
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={handleLocateUser}
+          disabled={isLocating}
+          className="bg-card/95 backdrop-blur-sm border border-border shadow-lg hover:bg-card"
+        >
+          {isLocating ? (
+            <Spinner size={16} className="mr-2 animate-spin" />
+          ) : (
+            <Crosshair size={16} className="mr-2" />
+          )}
+          {isLocating ? 'Locating...' : 'My Location'}
+        </Button>
+      </div>
+      
       {/* Map legend */}
       <div className="absolute top-4 right-4 bg-card/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-lg z-10">
         <h4 className="font-medium text-sm text-foreground mb-2">Legend</h4>
@@ -147,6 +281,12 @@ export function MapView({ restaurants, onRestaurantClick }: MapViewProps) {
             <div className="w-4 h-4 rounded-full bg-primary border-2 border-white shadow-sm"></div>
             <span className="text-muted-foreground">To Visit</span>
           </div>
+          {userLocation && (
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-sm"></div>
+              <span className="text-muted-foreground">Your Location</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
